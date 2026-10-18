@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="ms" data-theme="">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Retirement Dashboard Malaysia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+/* === LAYOUT: sticky header + tab bar, scrollable main, card grid === */
+:root {
+  --primary:       #0057A8;
+  --primary-lt:    #1A72CC;
+  --primary-dk:    #003D7A;
+  --accent:        #00A0D2;
+  --success:       #0A8754;
+  --warning:       #D97706;
+  --danger:        #C0392B;
+  --bg:            #EEF2F7;
+  --surface:       #FFFFFF;
+  --surface2:      #F4F7FB;
+  --border:        #D0DCEB;
+  --text:          #1C2B3A;
+  --muted:         #637080;
+  --shadow-sm:     0 1px 4px rgba(0,0,0,.07);
+  --shadow:        0 2px 12px rgba(0,87,168,.09);
+  --radius:        14px;
+  --radius-sm:     8px;
+  color-scheme:    light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:       #0D1824;
+    --surface:  #162234;
+    --surface2: #1D2E44;
+    --border:   #253A55;
+    --text:     #E2EAF3;
+    --muted:    #7A95B0;
+    --shadow-sm:0 1px 4px rgba(0,0,0,.25);
+    --shadow:   0 2px 12px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:       #0D1824;
+  --surface:  #162234;
+  --surface2: #1D2E44;
+  --border:   #253A55;
+  --text:     #E2EAF3;
+  --muted:    #7A95B0;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.25);
+  --shadow:   0 2px 12px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', 'Noto Sans', system-ui, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  padding-left:  max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.app-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 50;
+  background: linear-gradient(135deg, var(--primary-dk) 0%, var(--primary) 55%, var(--accent) 100%);
+  padding: 12px max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.25);
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 51;
+  background: var(--primary-dk);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+.brand-text h1 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand-text p {
+  font-size: 11px;
+  color: rgba(255,255,255,.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.hbtn {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.hbtn:hover { background: rgba(255,255,255,.25); }
+
+/* ── Tab bar ─────────────────────────────────────────────────── */
+.tab-bar {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+  z-index: 40;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  padding-left:  max(4px, env(safe-area-inset-left, 0px));
+  padding-right: max(4px, env(safe-area-inset-right, 0px));
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 13px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+  user-select: none;
+}
+.tab:hover { color: var(--primary-lt); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ── Main ────────────────────────────────────────────────────── */
+.main {
+  padding: 16px max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+  max-width: 860px;
+  margin: 0 auto;
+}
+.pane { display: none; }
+.pane.active { display: block; }
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.card-head {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.card-body { padding: 16px 18px; }
+
+/* ── Score gauge section ─────────────────────────────────────── */
+.score-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 14px;
+  gap: 10px;
+}
+.gauge-ring { position: relative; width: 170px; height: 170px; }
+.gauge-ring canvas { display: block; }
+.gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.score-num {
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.score-pct { font-size: 18px; font-weight: 700; color: var(--muted); }
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.badge-excellent { background: #DCFCE7; color: #166534; }
+.badge-ready     { background: #DBEAFE; color: #1E40AF; }
+.badge-almost    { background: #FEF3C7; color: #92400E; }
+.badge-needs     { background: #FFE4C4; color: #7C2D12; }
+.badge-risk      { background: #FEE2E2; color: #991B1B; }
+.badge-none      { background: var(--surface2); color: var(--muted); }
+:root[data-theme="dark"] .badge-excellent { background: #14532D; color: #86EFAC; }
+:root[data-theme="dark"] .badge-ready     { background: #1E3A8A; color: #93C5FD; }
+:root[data-theme="dark"] .badge-almost    { background: #78350F; color: #FDE68A; }
+:root[data-theme="dark"] .badge-needs     { background: #7C2D12; color: #FED7AA; }
+:root[data-theme="dark"] .badge-risk      { background: #7F1D1D; color: #FCA5A5; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .badge-excellent { background: #14532D; color: #86EFAC; }
+  :root:not([data-theme="light"]) .badge-ready     { background: #1E3A8A; color: #93C5FD; }
+  :root:not([data-theme="light"]) .badge-almost    { background: #78350F; color: #FDE68A; }
+  :root:not([data-theme="light"]) .badge-needs     { background: #7C2D12; color: #FED7AA; }
+  :root:not([data-theme="light"]) .badge-risk      { background: #7F1D1D; color: #FCA5A5; }
+}
+.score-desc { font-size: 12px; color: var(--muted); text-align: center; max-width: 280px; }
+
+/* ── KPI grid ────────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.kpi-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.kpi-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.5px;
+}
+.kpi-val.pos { color: var(--success); }
+.kpi-val.neg { color: var(--danger); }
+
+/* ── Asset list ──────────────────────────────────────────────── */
+.asset-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.asset-row:last-child { border-bottom: none; }
+.asset-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.asset-info { flex: 1; min-width: 0; }
+.asset-name { font-size: 13px; font-weight: 600; }
+.asset-sub  { font-size: 10px; color: var(--muted); }
+.asset-right { text-align: right; flex-shrink: 0; }
+.asset-val { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.asset-pct { font-size: 10px; color: var(--muted); }
+.asset-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  margin-top: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Protection grid ─────────────────────────────────────────── */
+.prot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.prot-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.prot-ico { font-size: 22px; }
+.prot-lbl { font-size: 12px; font-weight: 600; }
+.prot-sub { font-size: 10px; color: var(--muted); }
+
+/* ── Form elements ───────────────────────────────────────────── */
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--primary);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.f-grid { display: grid; gap: 10px; margin-bottom: 16px; }
+.f-grid-2 { grid-template-columns: 1fr 1fr; }
+.f-group { display: flex; flex-direction: column; gap: 5px; }
+.f-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.f-pfx { position: relative; }
+.f-pfx-tag {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  pointer-events: none;
+  user-select: none;
+}
+input.f-input, select.f-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  transition: border-color .15s, box-shadow .15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input.f-input.has-pfx { padding-left: 30px; }
+input.f-input:focus, select.f-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0,87,168,.12);
+}
+
+/* ── Toggle ──────────────────────────────────────────────────── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-info .tgl-lbl { font-size: 13px; font-weight: 600; }
+.toggle-info .tgl-sub { font-size: 11px; color: var(--muted); }
+.switch { position: relative; width: 42px; height: 23px; flex-shrink: 0; }
+.switch input { display: none; }
+.slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 23px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.slider::before {
+  content: '';
+  position: absolute;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.switch input:checked + .slider { background: var(--success); }
+.switch input:checked + .slider::before { transform: translateX(19px); }
+
+/* ── Scorecard ───────────────────────────────────────────────── */
+.sc-item { margin-bottom: 15px; }
+.sc-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.sc-name { font-size: 13px; font-weight: 600; }
+.sc-wt   { font-size: 10px; color: var(--muted); margin-left: 5px; }
+.sc-score { font-size: 13px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+.bar {
+  height: 9px;
+  background: var(--surface2);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.sc-desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.sc-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 4px;
+  border-top: 2px solid var(--border);
+  margin-top: 4px;
+}
+.sc-total-lbl { font-size: 15px; font-weight: 700; }
+.sc-total-val { font-size: 26px; font-weight: 900; color: var(--primary); font-variant-numeric: tabular-nums; }
+
+/* ── Rec items ───────────────────────────────────────────────── */
+.rec-item {
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-left: 3px solid var(--warning);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.rec-ok {
+  border-left-color: var(--success);
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* ── Chart ───────────────────────────────────────────────────── */
+.chart-wrap {
+  position: relative;
+  height: 260px;
+  padding: 8px;
+}
+
+/* ── History rows ────────────────────────────────────────────── */
+.hist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.hist-row:last-child { border-bottom: none; }
+.hist-date { font-weight: 600; }
+.hist-assets { font-size: 11px; color: var(--muted); }
+.hist-pct { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; }
+
+/* ── Report ──────────────────────────────────────────────────── */
+.report-header {
+  background: linear-gradient(135deg, var(--primary-dk), var(--primary));
+  color: #fff;
+  padding: 24px 20px;
+  text-align: center;
+}
+.report-big { font-size: 48px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--muted); }
+.info-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: filter .15s, transform .1s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary  { background: var(--primary); color: #fff; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { filter: brightness(.97); }
+.btn-danger   { background: var(--danger); color: #fff; }
+.btn-danger:hover { filter: brightness(1.1); }
+.btn-success  { background: var(--success); color: #fff; }
+.btn-success:hover { filter: brightness(1.1); }
+
+/* ── Summary box ─────────────────────────────────────────────── */
+.info-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+/* ── Toast ───────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  background: #1C2B3A;
+  color: #fff;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: transform .3s, opacity .3s;
+  pointer-events: none;
+  max-width: 280px;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.ok  { background: var(--success); }
+#toast.err { background: var(--danger); }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 500px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .f-grid-2  { grid-template-columns: 1fr; }
+  .prot-grid { grid-template-columns: 1fr; }
+  .score-num { font-size: 38px; }
+  .brand-text h1 { font-size: 13px; }
+}
+@media print {
+  .tab-bar, .app-header, .btn-row, .no-print { display: none !important; }
+  body { background: #fff; }
+}
+</style>
+
+<!-- ════════════════════════════ HEADER ════════════════════════════ -->
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-icon">🏦</div>
+    <div class="brand-text">
+      <h1>Retirement Readiness Dashboard</h1>
+      <p>Pelan Persaraan Malaysia · <span id="hdrName">--</span></p>
+    </div>
+  </div>
+  <div class="header-btns">
+    <button class="hbtn" onclick="saveNow()">💾 Simpan</button>
+    <button class="hbtn" id="darkBtn" onclick="toggleDark()">🌙</button>
+  </div>
+</header>
+
+<!-- ════════════════════════════ TAB BAR ═══════════════════════════ -->
+<nav class="tab-bar">
+  <div class="tab active" data-tab="dashboard">🏠 Dashboard</div>
+  <div class="tab" data-tab="aset">💰 Aset</div>
+  <div class="tab" data-tab="trend">📈 Trend</div>
+  <div class="tab" data-tab="scorecard">📋 Scorecard</div>
+  <div class="tab" data-tab="report">📄 Report</div>
+  <div class="tab" data-tab="settings">⚙ Settings</div>
+</nav>
+
+<!-- ════════════════════════════ MAIN ══════════════════════════════ -->
+<div class="main">
+
+  <!-- ─── DASHBOARD ─────────────────────────────────────────────── -->
+  <div class="pane active" id="pane-dashboard">
+
+    <!-- Score card -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📊 Ready To Retire Score</div>
+        <div style="font-size:11px;color:var(--muted);" id="lastSavedTxt">Belum disimpan</div>
+      </div>
+      <div class="score-wrap">
+        <div class="gauge-ring">
+          <canvas id="gaugeCanvas" width="170" height="170"></canvas>
+          <div class="gauge-center">
+            <span class="score-num" id="scoreNum">--</span>
+            <span class="score-pct" id="scorePct">%</span>
+          </div>
+        </div>
+        <span class="score-badge badge-none" id="scoreBadge">💡 Isi maklumat untuk mula</span>
+        <p class="score-desc" id="scoreDesc">Pergi ke tab Aset untuk masukkan maklumat anda</p>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-lbl">Pencen/bln</div><div class="kpi-val" id="kpiIncome">RM 0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Perbelanjaan</div><div class="kpi-val" id="kpiExp">RM 0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Surplus/Defisit</div><div class="kpi-val" id="kpiSurplus">RM 0</div></div>
+    </div>
+
+    <!-- Assets summary -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">💰 Simpanan & Pelaburan</div>
+        <div style="font-size:13px;font-weight:800;color:var(--primary);font-variant-numeric:tabular-nums;" id="dashTotalAsset">RM 0</div>
+      </div>
+      <div class="card-body">
+        <div id="dashAssetList"><div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Pergi ke tab Aset untuk masukkan maklumat.</div></div>
+      </div>
+    </div>
+
+    <!-- Protection -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">🛡️ Perlindungan & Harta</div></div>
+      <div class="card-body">
+        <div class="prot-grid">
+          <div class="prot-item"><div class="prot-ico" id="dMed">❓</div><div><div class="prot-lbl">Medical Card</div><div class="prot-sub" id="dMedS">Tidak ditetapkan</div></div></div>
+          <div class="prot-item"><div class="prot-ico" id="dIns">❓</div><div><div class="prot-lbl">Life Insurance</div><div class="prot-sub" id="dInsS">Tidak ditetapkan</div></div></div>
+          <div class="prot-item"><div class="prot-ico" id="dWas">❓</div><div><div class="prot-lbl">Wasiat</div><div class="prot-sub" id="dWasS">Tidak ditetapkan</div></div></div>
+          <div class="prot-item"><div class="prot-ico" id="dHib">❓</div><div><div class="prot-lbl">Hibah</div><div class="prot-sub" id="dHibS">Tidak ditetapkan</div></div></div>
+        </div>
+        <div class="info-row" style="margin-top:6px;">
+          <div class="info-label">Dana Kecemasan</div>
+          <div class="info-val" id="dEmerg">-- bulan</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+
+  <!-- ─── ASET (INPUT) ───────────────────────────────────────────── -->
+  <div class="pane" id="pane-aset">
+
+    <!-- Profil -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">👤 Profil Persaraan</div></div>
+      <div class="card-body">
+        <div class="f-grid f-grid-2">
+          <div class="f-group">
+            <label class="f-label">Nama</label>
+            <input class="f-input" id="iName" type="text" placeholder="Nama penuh" oninput="calc()">
+          </div>
+          <div class="f-group">
+            <label class="f-label">Tahun Lahir</label>
+            <input class="f-input" id="iBY" type="number" placeholder="cth. 1975" min="1940" max="2005" oninput="calc()">
+          </div>
+          <div class="f-group">
+            <label class="f-label">Umur Persaraan</label>
+            <input class="f-input" id="iRA" type="number" placeholder="cth. 60" min="45" max="75" oninput="calc()">
+          </div>
+          <div class="f-group">
+            <label class="f-label">Jangka Hayat Sasaran</label>
+            <input class="f-input" id="iLE" type="number" placeholder="cth. 80" min="60" max="100" oninput="calc()">
+          </div>
+        </div>
+        <div id="profileBox" class="info-box" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Pendapatan -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">💵 Pendapatan Persaraan</div></div>
+      <div class="card-body">
+        <div class="f-grid f-grid-2">
+          <div class="f-group">
+            <label class="f-label">Gaji Akhir (RM/bln)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iLS" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Pencen Bulanan (RM/bln)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iPen" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Pendapatan Lain (RM/bln)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iSI" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Perbelanjaan Bulanan (RM/bln)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iExp" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simpanan -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">🏦 Simpanan & Pelaburan</div></div>
+      <div class="card-body">
+        <div class="f-grid f-grid-2">
+          <div class="f-group">
+            <label class="f-label">KWSP / EPF (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iKW" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">ASB (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iASB" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Tabung Haji (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iTH" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Saham (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iSH" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Unit Trust (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iUT" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Fixed Deposit (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iFD" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Hartanah – Nilai Bersih (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iProp" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Lain-lain (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iOth" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+        </div>
+        <div class="asset-total">
+          <span>Jumlah Aset</span>
+          <span id="totalAssetsInForm" style="font-size:18px;">RM 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dana Kecemasan -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">🆘 Dana Kecemasan</div></div>
+      <div class="card-body">
+        <div class="f-grid f-grid-2">
+          <div class="f-group">
+            <label class="f-label">Simpanan Kecemasan (RM)</label>
+            <div class="f-pfx"><span class="f-pfx-tag">RM</span><input class="f-input has-pfx" id="iEF" type="number" placeholder="0" min="0" oninput="calc()"></div>
+          </div>
+        </div>
+        <div id="efBox" class="info-box" style="margin-top:10px;">Masukkan simpanan kecemasan untuk lihat bilangan bulan yang dilindungi.</div>
+      </div>
+    </div>
+
+    <!-- Perlindungan -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">🛡️ Perlindungan</div></div>
+      <div class="card-body">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tgl-lbl">Medical Card</div><div class="tgl-sub">Insurans perubatan aktif</div></div>
+          <label class="switch"><input type="checkbox" id="iMed" onchange="calc()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tgl-lbl">Life Insurance</div><div class="tgl-sub">Insurans hayat aktif</div></div>
+          <label class="switch"><input type="checkbox" id="iIns" onchange="calc()"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pewarisan -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">📜 Perancangan Harta</div></div>
+      <div class="card-body">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tgl-lbl">Wasiat</div><div class="tgl-sub">Dokumen wasiat sudah disediakan</div></div>
+          <label class="switch"><input type="checkbox" id="iWas" onchange="calc()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tgl-lbl">Hibah</div><div class="tgl-sub">Pembahagian harta secara hibah</div></div>
+          <label class="switch"><input type="checkbox" id="iHib" onchange="calc()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tgl-lbl">Penama KWSP</div><div class="tgl-sub">Penamaan benefisiari dikemaskini</div></div>
+          <label class="switch"><input type="checkbox" id="iNom" onchange="calc()"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveNow()">💾 Simpan Assessment</button>
+      <button class="btn btn-secondary" onclick="resetForm()">↺ Reset</button>
+    </div>
+
+  </div><!-- /aset -->
+
+  <!-- ─── TREND ──────────────────────────────────────────────────── -->
+  <div class="pane" id="pane-trend">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📈 Trend Skor (6 Rekod Terkini)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📋 Sejarah Assessment</div>
+        <button class="btn btn-secondary no-print" onclick="clearHist()" style="font-size:11px;padding:5px 10px;">Padam Sejarah</button>
+      </div>
+      <div class="card-body" id="histList">
+        <div style="text-align:center;padding:24px;color:var(--muted);">Belum ada rekod. Simpan assessment pertama anda!</div>
+      </div>
+    </div>
+  </div><!-- /trend -->
+
+  <!-- ─── SCORECARD ─────────────────────────────────────────────── -->
+  <div class="pane" id="pane-scorecard">
+    <div class="card">
+      <div class="card-head"><div class="card-title">📋 Scorecard Terperinci</div></div>
+      <div class="card-body">
+        <!-- Cash Flow -->
+        <div class="sc-item">
+          <div class="sc-top"><div><span class="sc-name">💵 Aliran Tunai (Cash Flow)</span><span class="sc-wt">Wajaran: 30%</span></div><span class="sc-score" id="sc1v">0/30</span></div>
+          <div class="bar"><div class="bar-fill" id="sc1b" style="width:0%;background:#0057A8;"></div></div>
+          <div class="sc-desc" id="sc1d">Masukkan maklumat pendapatan dan perbelanjaan</div>
+        </div>
+        <!-- Emergency -->
+        <div class="sc-item">
+          <div class="sc-top"><div><span class="sc-name">🆘 Dana Kecemasan</span><span class="sc-wt">Wajaran: 20%</span></div><span class="sc-score" id="sc2v">0/20</span></div>
+          <div class="bar"><div class="bar-fill" id="sc2b" style="width:0%;background:#0A8754;"></div></div>
+          <div class="sc-desc" id="sc2d">Sasaran: ≥6 bulan perbelanjaan</div>
+        </div>
+        <!-- Savings -->
+        <div class="sc-item">
+          <div class="sc-top"><div><span class="sc-name">🏦 Simpanan Persaraan</span><span class="sc-wt">Wajaran: 25%</span></div><span class="sc-score" id="sc3v">0/25</span></div>
+          <div class="bar"><div class="bar-fill" id="sc3b" style="width:0%;background:#D97706;"></div></div>
+          <div class="sc-desc" id="sc3d">Sasaran: 20× perbelanjaan tahunan</div>
+        </div>
+        <!-- Protection -->
+        <div class="sc-item">
+          <div class="sc-top"><div><span class="sc-name">🛡️ Perlindungan</span><span class="sc-wt">Wajaran: 15%</span></div><span class="sc-score" id="sc4v">0/15</span></div>
+          <div class="bar"><div class="bar-fill" id="sc4b" style="width:0%;background:#1A72CC;"></div></div>
+          <div class="sc-desc" id="sc4d">Medical card + life insurance</div>
+        </div>
+        <!-- Estate -->
+        <div class="sc-item">
+          <div class="sc-top"><div><span class="sc-name">📜 Pewarisan / Harta</span><span class="sc-wt">Wajaran: 10%</span></div><span class="sc-score" id="sc5v">0/10</span></div>
+          <div class="bar"><div class="bar-fill" id="sc5b" style="width:0%;background:#7C3AED;"></div></div>
+          <div class="sc-desc" id="sc5d">Wasiat, hibah, penama KWSP</div>
+        </div>
+
+        <div class="sc-total">
+          <div class="sc-total-lbl">Jumlah Skor</div>
+          <div class="sc-total-val" id="scTotal">0/100</div>
+        </div>
+
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">💡 Cadangan Penambahbaikan</div>
+        <div id="recs">
+          <div class="rec-item rec-ok">Isi maklumat anda untuk dapatkan cadangan peribadi.</div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /scorecard -->
+
+  <!-- ─── REPORT ────────────────────────────────────────────────── -->
+  <div class="pane" id="pane-report">
+    <div class="card" id="reportArea">
+      <div class="report-header">
+        <div style="font-size:28px;margin-bottom:6px;">🏦</div>
+        <div style="font-size:19px;font-weight:800;letter-spacing:-.3px;">RETIREMENT READINESS REPORT</div>
+        <div style="font-size:14px;opacity:.8;margin-top:4px;" id="rName">--</div>
+        <div style="font-size:11px;opacity:.65;margin-top:3px;" id="rDate">--</div>
+        <div class="report-big" style="margin-top:14px;" id="rScore">--</div>
+        <div style="font-size:15px;font-weight:700;margin-top:4px;" id="rBadgeTxt">--</div>
+      </div>
+      <div class="card-body">
+        <div class="info-row"><div class="info-label">Pendapatan Persaraan / bln</div><div class="info-val" id="rInc">--</div></div>
+        <div class="info-row"><div class="info-label">Perbelanjaan Bulanan</div><div class="info-val" id="rExp">--</div></div>
+        <div class="info-row"><div class="info-label">Surplus / Defisit</div><div class="info-val" id="rSur">--</div></div>
+        <div class="info-row"><div class="info-label">Jumlah Aset Persaraan</div><div class="info-val" id="rAssets">--</div></div>
+        <div class="info-row"><div class="info-label">Dana Kecemasan</div><div class="info-val" id="rEF">--</div></div>
+        <div class="info-row"><div class="info-label">Medical Card / Insurance</div><div class="info-val" id="rProt">--</div></div>
+        <div class="info-row"><div class="info-label">Wasiat / Hibah / Penama</div><div class="info-val" id="rEstate">--</div></div>
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Pecahan Skor</div>
+        <div id="rScorecard" style="font-size:12.5px;"></div>
+        <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);margin-top:14px;font-size:11px;color:var(--muted);line-height:1.7;">
+          Laporan ini dijana oleh Retirement Readiness Dashboard Malaysia<br>
+          Untuk kegunaan peribadi sahaja. Dapatkan nasihat profesional untuk perancangan kewangan.
+        </div>
+      </div>
+    </div>
+    <div class="btn-row no-print" style="margin-top:12px;">
+      <button class="btn btn-primary" onclick="doPDF()">📄 Export PDF</button>
+    </div>
+  </div><!-- /report -->
+
+  <!-- ─── SETTINGS ──────────────────────────────────────────────── -->
+  <div class="pane" id="pane-settings">
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">🎨 Paparan</div></div>
+      <div class="card-body">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tgl-lbl">Dark Mode</div><div class="tgl-sub">Tukar ke mod gelap</div></div>
+          <label class="switch"><input type="checkbox" id="sDark" onchange="toggleDarkCheck(this)"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">💾 Pengurusan Data</div></div>
+      <div class="card-body">
+        <div style="margin-bottom:14px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px;">Eksport Data (Sandaran JSON)</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Muat turun data anda untuk sandaran luar talian.</div>
+          <button class="btn btn-secondary" onclick="exportJSON()">📤 Eksport JSON</button>
+        </div>
+        <div class="divider"></div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px;">Import Data</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pulihkan dari fail JSON sandaran.</div>
+          <input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="display:none;">
+          <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
+        </div>
+        <div class="divider"></div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:3px;">Padam Semua Data</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">⚠️ Tindakan ini tidak boleh diundur.</div>
+          <button class="btn btn-danger" onclick="nukeAll()">🗑️ Padam Semua</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">ℹ️ Tentang</div></div>
+      <div class="card-body">
+        <div class="info-row"><div class="info-label">Versi</div><div class="info-val">1.0.0</div></div>
+        <div class="info-row"><div class="info-label">Storan</div><div class="info-val">localStorage (Pelayar)</div></div>
+        <div class="info-row"><div class="info-label">Privasi</div><div class="info-val">Data tidak keluar dari peranti anda</div></div>
+        <div class="info-row"><div class="info-label">Sesuai untuk</div><div class="info-val">Penjawat awam, pesara, semua rakyat Malaysia</div></div>
+        <div class="info-box" style="margin-top:12px;">
+          <strong>Penafian:</strong> Dashboard ini adalah alat penilaian diri sahaja dan bukan nasihat kewangan. Untuk perancangan kewangan rasmi, sila hubungi perancang kewangan berlesen atau KWSP.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /settings -->
+
+</div><!-- /main -->
+
+<div id="toast">✅ Berjaya!</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let S = {
+  name:'', by:0, ra:60, le:80,
+  ls:0, pen:0, si:0, exp:0,
+  kw:0, asb:0, th:0, sh:0, ut:0, fd:0, prop:0, oth:0,
+  ef:0,
+  med:false, ins:false, was:false, hib:false, nom:false
+};
+let HIST = [];
+let SCORES = { cf:0, ef:0, sv:0, pr:0, es:0, tot:0 };
+let trendChartInst = null;
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  loadStorage();
+  fillForm();
+  calc();
+  buildTrend();
+  buildHist();
+  buildReport();
+  initTabs();
+
+  // dark mode init
+  const dark = lsGet('rrd_dark') === 'true';
+  if (dark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('darkBtn').textContent = '☀️';
+    document.getElementById('sDark').checked = true;
+  }
+  const ls = lsGet('rrd_saved');
+  if (ls) document.getElementById('lastSavedTxt').textContent = 'Disimpan: ' + ls;
+});
+
+// ══════════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════════
+function initTabs() {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('pane-' + t.dataset.tab).classList.add('active');
+      if (t.dataset.tab === 'trend') buildTrend();
+      if (t.dataset.tab === 'report') buildReport();
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  LOCAL STORAGE helpers
+// ══════════════════════════════════════════════════════════════
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lsRm(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function loadStorage() {
+  try {
+    const s = lsGet('rrd_state');
+    if (s) S = { ...S, ...JSON.parse(s) };
+    const h = lsGet('rrd_hist');
+    if (h) HIST = JSON.parse(h);
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════════
+//  FORM
+// ══════════════════════════════════════════════════════════════
+function id(x){ return document.getElementById(x); }
+function num(x){ return parseFloat(id(x).value) || 0; }
+function chk(x){ return id(x).checked; }
+
+function collectForm() {
+  S.name = id('iName').value || '';
+  S.by   = parseInt(id('iBY').value) || 0;
+  S.ra   = parseInt(id('iRA').value) || 60;
+  S.le   = parseInt(id('iLE').value) || 80;
+  S.ls   = num('iLS'); S.pen = num('iPen'); S.si  = num('iSI'); S.exp = num('iExp');
+  S.kw   = num('iKW'); S.asb = num('iASB'); S.th  = num('iTH'); S.sh  = num('iSH');
+  S.ut   = num('iUT'); S.fd  = num('iFD');  S.prop= num('iProp'); S.oth = num('iOth');
+  S.ef   = num('iEF');
+  S.med  = chk('iMed'); S.ins = chk('iIns');
+  S.was  = chk('iWas'); S.hib = chk('iHib'); S.nom = chk('iNom');
+}
+
+function fillForm() {
+  id('iName').value = S.name || '';
+  id('iBY').value   = S.by   || '';
+  id('iRA').value   = S.ra   || 60;
+  id('iLE').value   = S.le   || 80;
+  const nums = [['iLS',S.ls],['iPen',S.pen],['iSI',S.si],['iExp',S.exp],
+                ['iKW',S.kw],['iASB',S.asb],['iTH',S.th],['iSH',S.sh],
+                ['iUT',S.ut],['iFD',S.fd],['iProp',S.prop],['iOth',S.oth],['iEF',S.ef]];
+  nums.forEach(([k,v]) => { if(v) id(k).value = v; });
+  id('iMed').checked = S.med; id('iIns').checked = S.ins;
+  id('iWas').checked = S.was; id('iHib').checked = S.hib; id('iNom').checked = S.nom;
+}
+
+function resetForm() {
+  if (!confirm('Reset semua maklumat?')) return;
+  document.querySelectorAll('.f-input').forEach(i => i.value = '');
+  document.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false);
+  calc();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CALCULATE
+// ══════════════════════════════════════════════════════════════
+function totalAssets() {
+  return S.kw + S.asb + S.th + S.sh + S.ut + S.fd + S.prop + S.oth;
+}
+function rm(v) {
+  if (!v && v !== 0) return 'RM 0';
+  const abs = Math.abs(v);
+  return 'RM ' + abs.toLocaleString('ms-MY', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+
+function calc() {
+  collectForm();
+  const yr   = new Date().getFullYear();
+  const age  = S.by ? yr - S.by : 0;
+  const ytr  = Math.max(0, S.ra - age);
+  const ryrs = Math.max(0, S.le - S.ra);
+  const inc  = S.pen + S.si;
+  const sur  = inc - S.exp;
+  const ta   = totalAssets();
+  const efMo = S.exp > 0 ? (S.ef / S.exp) : 0;
+  const tgt  = S.exp > 0 ? S.exp * 12 * 20 : 500000; // 20× annual expenses
+
+  // ── Scoring ─────────────────────────────────────────────────
+  // 1. Cash flow (30)
+  let cf = 0;
+  if (inc > 0 && S.exp > 0) {
+    const r = inc / S.exp;
+    cf = r >= 1.5 ? 30 : r >= 1.2 ? 25 : r >= 1.0 ? 20 : r >= 0.8 ? 12 : 5;
+  }
+
+  // 2. Emergency fund (20)
+  let ef = 0;
+  if (efMo >= 12) ef = 20;
+  else if (efMo >= 6)  ef = 16;
+  else if (efMo >= 3)  ef = 10;
+  else if (efMo >= 1)  ef = 5;
+
+  // 3. Savings (25)
+  let sv = 0;
+  if (ta > 0) {
+    const r = ta / tgt;
+    sv = r >= 1.0 ? 25 : r >= .75 ? 20 : r >= .5 ? 14 : r >= .25 ? 8 : 3;
+  }
+
+  // 4. Protection (15)
+  const pr = (S.med ? 8 : 0) + (S.ins ? 7 : 0);
+
+  // 5. Estate (10)
+  const es = (S.was ? 4 : 0) + (S.hib ? 3 : 0) + (S.nom ? 3 : 0);
+
+  const tot = cf + ef + sv + pr + es;
+  SCORES = { cf, ef, sv, pr, es, tot };
+
+  // ── Update UI ────────────────────────────────────────────────
+  id('hdrName').textContent = S.name || '--';
+  const hasData = inc > 0 || ta > 0 || S.med || S.was;
+
+  // Score display
+  if (hasData) {
+    id('scoreNum').textContent = tot;
+    id('scorePct').textContent = '%';
+    drawGauge(tot);
+
+    let cls, label, desc;
+    if (tot >= 90)      { cls='excellent'; label='🟢 Excellent – Sangat Bersedia'; desc='Persaraan anda dalam keadaan yang sangat baik! Teruskan!'; id('scoreNum').style.color='var(--success)'; }
+    else if (tot >= 80) { cls='ready';     label='🟢 Ready – Bersedia';            desc='Anda bersedia untuk bersara. Fokus kekal & pertumbuhan.'; id('scoreNum').style.color='var(--primary)'; }
+    else if (tot >= 70) { cls='almost';    label='🟡 Almost Ready – Hampir Bersedia'; desc='Beberapa penambahbaikan kecil diperlukan.'; id('scoreNum').style.color='var(--warning)'; }
+    else if (tot >= 60) { cls='needs';     label='🟠 Needs Improvement';             desc='Perlu tindakan dalam beberapa aspek perancangan.'; id('scoreNum').style.color='var(--warning)'; }
+    else                { cls='risk';      label='🔴 High Risk – Perlu Tindakan Segera'; desc='Sila buat perancangan persaraan segera.'; id('scoreNum').style.color='var(--danger)'; }
+
+    id('scoreBadge').className = 'score-badge badge-' + cls;
+    id('scoreBadge').textContent = label;
+    id('scoreDesc').textContent  = desc;
+  } else {
+    id('scoreNum').textContent = '--';
+    id('scorePct').textContent = '%';
+    id('scoreBadge').className = 'score-badge badge-none';
+    id('scoreBadge').textContent = '💡 Isi maklumat untuk mula';
+    id('scoreDesc').textContent  = 'Pergi ke tab Aset untuk masukkan maklumat anda';
+    id('scoreNum').style.color = 'var(--primary)';
+    drawGauge(0);
+  }
+
+  // KPIs
+  id('kpiIncome').textContent = rm(inc);
+  id('kpiExp').textContent    = rm(S.exp);
+  const surEl = id('kpiSurplus');
+  surEl.textContent = (sur < 0 ? '-' : '') + rm(Math.abs(sur));
+  surEl.className   = 'kpi-val ' + (sur >= 0 ? 'pos' : 'neg');
+
+  // Assets dashboard
+  id('dashTotalAsset').textContent = rm(ta);
+  buildDashAssets(ta);
+
+  // Protection dash
+  const pd = [
+    ['dMed','dMedS', S.med, 'Aktif ✅', 'Tidak aktif'],
+    ['dIns','dInsS', S.ins, 'Aktif ✅', 'Tidak aktif'],
+    ['dWas','dWasS', S.was, 'Selesai ✅', 'Belum selesai'],
+    ['dHib','dHibS', S.hib, 'Selesai ✅', 'Belum selesai'],
+  ];
+  pd.forEach(([ico, sub, val, yes, no]) => {
+    id(ico).textContent = val ? '✅' : '❌';
+    id(sub).textContent = val ? yes : no;
+  });
+
+  // Emergency
+  id('dEmerg').textContent = efMo > 0
+    ? efMo.toFixed(1) + ' bulan ' + (efMo >= 6 ? '✅' : '⚠️')
+    : '-- bulan';
+
+  // Emergency form box
+  if (S.exp > 0 && S.ef > 0) {
+    id('efBox').innerHTML = '<strong>' + efMo.toFixed(1) + ' bulan</strong> perbelanjaan dilindungi. ' +
+      (efMo >= 6 ? '✅ Mencukupi (sasaran ≥6 bulan).' :
+       efMo >= 3 ? '⚠️ Sederhana. Sasaran: ' + rm(S.exp * 6) + '.' :
+                   '🔴 Tidak mencukupi. Sasaran: ' + rm(S.exp * 6) + '.');
+  }
+
+  // Profile summary
+  if (S.by && S.ra) {
+    id('profileBox').style.display = 'block';
+    const ryr = S.by + S.ra;
+    id('profileBox').innerHTML =
+      'Umur semasa: <strong>' + age + ' tahun</strong> · ' +
+      'Bersara pada: <strong>' + ryr + '</strong> (' + S.ra + ' tahun) · ' +
+      (ytr > 0 ? '<strong>' + ytr + ' tahun</strong> lagi' : '<strong>Sudah bersara</strong>') +
+      ' · Tempoh persaraan: <strong>' + ryrs + ' tahun</strong>';
+  } else {
+    id('profileBox').style.display = 'none';
+  }
+
+  // Total assets in form
+  id('totalAssetsInForm').textContent = rm(ta);
+
+  // Scorecard
+  [
+    ['sc1', cf, 30, S.exp > 0 ? 'Nisbah pendapatan/perbelanjaan: ' + (S.exp > 0 ? (inc/S.exp).toFixed(2) : '0') + 'x. ' + (sur >= 0 ? '✅ Surplus ' + rm(sur) : '⚠️ Defisit ' + rm(Math.abs(sur))) : 'Masukkan pendapatan dan perbelanjaan'],
+    ['sc2', ef, 20, S.exp > 0 ? 'Dana kecemasan: ' + efMo.toFixed(1) + ' bulan. Sasaran ≥6 bln = ' + rm(S.exp * 6) : 'Masukkan perbelanjaan dan dana kecemasan'],
+    ['sc3', sv, 25, S.exp > 0 ? 'Aset: ' + rm(ta) + '. Sasaran 20× perbelanjaan tahunan: ' + rm(tgt) : 'Masukkan aset dan perbelanjaan'],
+    ['sc4', pr, 15, 'Medical Card: ' + (S.med?'✅':'❌') + ' (8 pts) · Life Insurance: ' + (S.ins?'✅':'❌') + ' (7 pts)'],
+    ['sc5', es, 10, 'Wasiat: ' + (S.was?'✅':'❌') + ' · Hibah: ' + (S.hib?'✅':'❌') + ' · Penama KWSP: ' + (S.nom?'✅':'❌')],
+  ].forEach(([pfx, score, max, desc]) => {
+    id(pfx+'v').textContent = score + '/' + max;
+    id(pfx+'b').style.width = (score/max*100) + '%';
+    id(pfx+'d').textContent = desc;
+  });
+  id('scTotal').textContent = tot + '/100';
+
+  // Recommendations
+  const recs = [];
+  if (cf < 20 && (inc > 0 || S.exp > 0)) recs.push('💵 <strong>Aliran Tunai:</strong> Pertimbangkan sumber pendapatan tambahan atau kurangkan perbelanjaan selepas bersara.');
+  if (ef < 12 && S.exp > 0) recs.push('🆘 <strong>Dana Kecemasan:</strong> Sasarkan simpanan kecemasan ≥6 bulan perbelanjaan (' + rm(S.exp * 6) + ').');
+  if (sv < 15 && S.exp > 0) recs.push('🏦 <strong>Simpanan Persaraan:</strong> Tingkatkan caruman KWSP sukarela, ASB, atau instrumen pelaburan lain. Sasaran: ' + rm(tgt) + '.');
+  if (!S.med) recs.push('🏥 <strong>Medical Card:</strong> Dapatkan kad perubatan untuk perlindungan kos hospital dan rawatan.');
+  if (!S.ins) recs.push('🛡️ <strong>Life Insurance:</strong> Pertimbangkan insurans hayat untuk perlindungan keluarga sekiranya berlaku sesuatu.');
+  if (!S.was) recs.push('📜 <strong>Wasiat:</strong> Sediakan wasiat untuk memastikan harta diagih mengikut kehendak anda.');
+  if (!S.hib) recs.push('🎁 <strong>Hibah:</strong> Pertimbangkan hibah untuk pemindahan harta semasa hayat, mengelakkan proses faraid yang panjang.');
+  if (!S.nom) recs.push('📝 <strong>Penama KWSP:</strong> Kemaskini penamaan benefisiari KWSP anda segera melalui i-Akaun.');
+
+  id('recs').innerHTML = recs.length
+    ? recs.map(r => '<div class="rec-item">' + r + '</div>').join('')
+    : '<div class="rec-item rec-ok">🎉 Tahniah! Pelan persaraan anda dalam keadaan yang sangat baik. Teruskan!</div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD ASSET LIST
+// ══════════════════════════════════════════════════════════════
+function buildDashAssets(ta) {
+  const assets = [
+    { n:'KWSP / EPF', s:'Caruman mandatori', v:S.kw,   ico:'🏛️', col:'#0057A8' },
+    { n:'ASB',        s:'Amanah saham',      v:S.asb,  ico:'📈', col:'#0A8754' },
+    { n:'Tabung Haji',s:'Simpanan haji',     v:S.th,   ico:'🕌', col:'#D97706' },
+    { n:'Saham',      s:'Portfolio saham',   v:S.sh,   ico:'📊', col:'#7C3AED' },
+    { n:'Unit Trust', s:'Amanah pelaburan',  v:S.ut,   ico:'💼', col:'#DB2777' },
+    { n:'Fixed Deposit',s:'Simpanan tetap',  v:S.fd,   ico:'🏦', col:'#0891B2' },
+    { n:'Hartanah',   s:'Nilai bersih',      v:S.prop, ico:'🏠', col:'#EA580C' },
+    { n:'Lain-lain',  s:'Aset lain',         v:S.oth,  ico:'💰', col:'#475569' },
+  ].filter(a => a.v > 0);
+
+  const el = id('dashAssetList');
+  if (!assets.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Belum ada aset dimasukkan. Pergi ke tab Aset.</div>';
+    return;
+  }
+  el.innerHTML = assets.map(a => {
+    const pct = ta > 0 ? (a.v / ta * 100).toFixed(1) : '0';
+    return `<div class="asset-row">
+      <div class="asset-icon" style="background:${a.col}22;">${a.ico}</div>
+      <div class="asset-info">
+        <div class="asset-name">${a.n}</div>
+        <div class="asset-sub">${a.s}</div>
+      </div>
+      <div class="asset-right">
+        <div class="asset-val">${rm(a.v)}</div>
+        <div class="asset-pct">${pct}%</div>
+      </div>
+    </div>`;
+  }).join('') + `<div class="asset-total"><span>Jumlah Aset</span><span>${rm(ta)}</span></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GAUGE
+// ══════════════════════════════════════════════════════════════
+function drawGauge(score) {
+  const cv = id('gaugeCanvas');
+  const ctx = cv.getContext('2d');
+  const w = cv.width, h = cv.height;
+  const cx = w/2, cy = h/2, r = 72;
+  ctx.clearRect(0, 0, w, h);
+
+  const start = 0.75 * Math.PI;
+  const sweep = 1.5 * Math.PI;
+
+  // Track
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, start, start + sweep);
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  ctx.strokeStyle = isDark ? '#253A55' : '#D0DCEB';
+  ctx.lineWidth = 13;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  if (score <= 0) return;
+
+  // Fill
+  const col = score >= 80 ? '#0A8754' : score >= 70 ? '#D97706' : score >= 60 ? '#F59E0B' : '#C0392B';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, start, start + (score / 100) * sweep);
+  const grad = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
+  grad.addColorStop(0, col + 'BB');
+  grad.addColorStop(1, col);
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 13;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TREND CHART
+// ══════════════════════════════════════════════════════════════
+function buildTrend() {
+  const ctx = id('trendChart').getContext('2d');
+  if (trendChartInst) { trendChartInst.destroy(); trendChartInst = null; }
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const gc = isDark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)';
+  const tc = isDark ? '#7A95B0' : '#637080';
+
+  let labels, data;
+  if (HIST.length > 0) {
+    const slice = HIST.slice(0, 6).reverse();
+    labels = slice.map(h => h.date);
+    data   = slice.map(h => h.score);
+  } else {
+    labels = ['Jan 2025','Apr 2025','Jul 2025','Okt 2025','Jan 2026','Okt 2026'];
+    data   = [65, 68, 72, 75, 78, 82];
+  }
+
+  trendChartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Skor Ready To Retire (%)',
+        data,
+        borderColor: '#0057A8',
+        backgroundColor: 'rgba(0,87,168,.1)',
+        borderWidth: 2.5,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#0057A8',
+        pointBorderColor: isDark ? '#162234' : '#fff',
+        pointBorderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' Skor: ' + ctx.raw + '%' } }
+      },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          ticks: { color: tc, callback: v => v + '%' },
+          grid: { color: gc }
+        },
+        x: {
+          ticks: { color: tc, maxRotation: 30 },
+          grid: { color: gc }
+        }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════════════════
+function buildHist() {
+  const el = id('histList');
+  if (!HIST.length) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);">Belum ada rekod. Simpan assessment pertama anda!</div>';
+    return;
+  }
+  el.innerHTML = HIST.map(h => {
+    const col = h.score >= 80 ? 'var(--success)' : h.score >= 70 ? 'var(--warning)' : 'var(--danger)';
+    return `<div class="hist-row">
+      <div>
+        <div class="hist-date">${h.date}</div>
+        <div class="hist-assets">Aset: ${rm(h.assets)}</div>
+      </div>
+      <div class="hist-pct" style="color:${col};">${h.score}%</div>
+    </div>`;
+  }).join('');
+}
+
+function clearHist() {
+  if (!confirm('Padam semua sejarah assessment?')) return;
+  HIST = [];
+  lsRm('rrd_hist');
+  buildHist();
+  buildTrend();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  REPORT
+// ══════════════════════════════════════════════════════════════
+function buildReport() {
+  const inc = S.pen + S.si;
+  const sur = inc - S.exp;
+  const ta  = totalAssets();
+  const efMo = S.exp > 0 ? (S.ef / S.exp) : 0;
+  const tot = SCORES.tot;
+
+  id('rName').textContent = S.name || '--';
+  const now = new Date();
+  id('rDate').textContent = 'Tarikh: ' + now.toLocaleDateString('ms-MY', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  id('rScore').textContent = (tot > 0 ? tot + '%' : '--');
+
+  let badge = '--';
+  if (tot >= 90) badge = '🟢 Excellent – Sangat Bersedia';
+  else if (tot >= 80) badge = '🟢 Ready – Bersedia';
+  else if (tot >= 70) badge = '🟡 Almost Ready – Hampir Bersedia';
+  else if (tot >= 60) badge = '🟠 Needs Improvement';
+  else if (tot > 0)   badge = '🔴 High Risk – Perlu Tindakan Segera';
+  id('rBadgeTxt').textContent = badge;
+
+  id('rInc').textContent    = rm(inc) + '/bln';
+  id('rExp').textContent    = rm(S.exp) + '/bln';
+  id('rSur').innerHTML      = `<span style="color:${sur>=0?'var(--success)':'var(--danger)'};">${sur>=0?'+':'-'}${rm(Math.abs(sur))}/bln</span>`;
+  id('rAssets').textContent = rm(ta);
+  id('rEF').textContent     = efMo.toFixed(1) + ' bulan ' + (efMo >= 6 ? '✅' : '⚠️');
+  id('rProt').textContent   = (S.med ? '✅ Medical' : '❌ Medical') + ' | ' + (S.ins ? '✅ Insurance' : '❌ Insurance');
+  id('rEstate').textContent = (S.was?'✅':'❌') + ' Wasiat | ' + (S.hib?'✅':'❌') + ' Hibah | ' + (S.nom?'✅':'❌') + ' Penama';
+
+  id('rScorecard').innerHTML = [
+    ['💵 Aliran Tunai', SCORES.cf, 30],
+    ['🆘 Dana Kecemasan', SCORES.ef, 20],
+    ['🏦 Simpanan Persaraan', SCORES.sv, 25],
+    ['🛡️ Perlindungan', SCORES.pr, 15],
+    ['📜 Pewarisan / Harta', SCORES.es, 10],
+  ].map(([l,s,m]) =>
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span>${l}</span><span style="font-weight:700;font-variant-numeric:tabular-nums;">${s}/${m}</span>
+    </div>`
+  ).join('') +
+  `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;">
+    <span>JUMLAH</span><span style="color:var(--primary);">${tot}/100</span>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SAVE
+// ══════════════════════════════════════════════════════════════
+function saveNow() {
+  calc();
+  lsSet('rrd_state', JSON.stringify(S));
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ms-MY', {day:'numeric',month:'short',year:'numeric'});
+  const entry = {
+    date:   dateStr,
+    ts:     now.getTime(),
+    score:  SCORES.tot,
+    assets: totalAssets()
+  };
+  HIST.unshift(entry);
+  if (HIST.length > 12) HIST.length = 12;
+  lsSet('rrd_hist', JSON.stringify(HIST));
+
+  const savedStr = now.toLocaleString('ms-MY');
+  lsSet('rrd_saved', savedStr);
+  id('lastSavedTxt').textContent = 'Disimpan: ' + dateStr;
+  buildHist();
+  buildReport();
+  toast('✅ Assessment disimpan berjaya!', 'ok');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DARK MODE
+// ══════════════════════════════════════════════════════════════
+function toggleDark() {
+  const on = document.documentElement.getAttribute('data-theme') === 'dark';
+  applyDark(!on);
+}
+function toggleDarkCheck(el) {
+  applyDark(el.checked);
+}
+function applyDark(on) {
+  document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+  id('darkBtn').textContent = on ? '☀️' : '🌙';
+  id('sDark').checked = on;
+  lsSet('rrd_dark', on ? 'true' : 'false');
+  setTimeout(buildTrend, 60);
+  drawGauge(SCORES.tot || 0);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ══════════════════════════════════════════════════════════════
+function exportJSON() {
+  const blob = new Blob([JSON.stringify({ S, HIST, ver: '1.0', ts: Date.now() }, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'retirement-data-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📤 Data dieksport berjaya!', 'ok');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (d.S) { S = { ...S, ...d.S }; lsSet('rrd_state', JSON.stringify(S)); }
+      if (d.HIST) { HIST = d.HIST; lsSet('rrd_hist', JSON.stringify(HIST)); }
+      fillForm(); calc(); buildHist(); buildTrend(); buildReport();
+      toast('📥 Data diimport berjaya!', 'ok');
+    } catch(_) { toast('❌ Fail tidak sah!', 'err'); }
+  };
+  reader.readAsText(file);
+}
+
+function nukeAll() {
+  if (!confirm('Padam SEMUA data termasuk sejarah? Tindakan ini tidak boleh diundur!')) return;
+  ['rrd_state','rrd_hist','rrd_saved','rrd_dark'].forEach(lsRm);
+  HIST = [];
+  S = { name:'', by:0, ra:60, le:80, ls:0, pen:0, si:0, exp:0,
+        kw:0, asb:0, th:0, sh:0, ut:0, fd:0, prop:0, oth:0, ef:0,
+        med:false, ins:false, was:false, hib:false, nom:false };
+  fillForm(); calc(); buildHist(); buildTrend(); buildReport();
+  toast('🗑️ Semua data dipadam', 'err');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PDF
+// ══════════════════════════════════════════════════════════════
+function doPDF() {
+  buildReport();
+  const el = id('reportArea');
+  if (typeof html2pdf !== 'undefined') {
+    toast('📄 Menjana PDF...', '');
+    html2pdf().set({
+      margin: 10,
+      filename: 'Retirement_Report_' + new Date().toISOString().slice(0,10) + '.pdf',
+      image: { type:'jpeg', quality:.95 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    }).from(el).save().then(() => toast('✅ PDF berjaya dijana!', 'ok'));
+  } else {
+    toast('⚠️ PDF library tidak tersedia. Cuba semula.', 'err');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, type) {
+  const el = id('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+}
+</script>
+</html>
